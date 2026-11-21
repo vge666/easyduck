@@ -15,7 +15,7 @@ The complete Cargo workspace is under `runtime/`. Build through `deploy/build.sh
 | Shared crate | robotd-params | Configuration parsing and parameter definitions |
 | Shared crate | kinematics | Pose geometry |
 
-The four shared crates compile into programs; they are not separate services. `runtime/test-fixtures/` contains test inputs, not board deployment settings.
+The four shared crates compile into programs; they are not separate services. `runtime/test-fixtures/` contains test inputs, not board deployment settings. The optional vision sidecar is Python under `vision/`, outside this workspace, and only sends existing IPC.
 
 `runtime/duck-control/tests/fixtures/scs_calibration_test_fixture.json` is a fixed automated-test sample and is not deployed. `config/board/zero_pos.json` is the uncalibrated installation baseline; each robot uses its own `/etc/robot/visual_calibration.json`.
 

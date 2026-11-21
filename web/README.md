@@ -34,6 +34,7 @@ Serves the operator controller and translates browser requests into robotd IPC. 
 
 - Control ownership is not account authentication. This service listens on port 9527 by default; its APIs require a trusted network.
 - The web controller exposes walking/head/posture/pickup controls with current model/state limits; roulade/jumping are rejected. UI labels are currently Chinese, including when reading English documentation.
+- `usb_camera.py` captures MJPEG for the page preview and for the optional vision sidecar. The sidecar does not pass through this HTTP service.
 
 ## Further reading
 

@@ -15,6 +15,7 @@
 | [robotd.service](robotd.service) | 主控进程与机器人 socket 权限 |
 | [padd.service](padd.service) | 手柄客户端用户／组与重启设置 |
 | [xgoduck-web.service](xgoduck-web.service) | Python 控制网页服务 |
+| [easyduck-vision.service](easyduck-vision.service) | 可选 YOLO 旁路；会安装，但 `deploy/start.sh` 不启动它 |
 | [xgoduck-calibration.service](xgoduck-calibration.service) | 互斥的标定进程 |
 | [easyduck-setup.service](easyduck-setup.service) | 需要登录的连接设置进程 |
 | [easyduck-gamepad-reconnect.timer](easyduck-gamepad-reconnect.timer) | 已登记手柄的重连时序 |

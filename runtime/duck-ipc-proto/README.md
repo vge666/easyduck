@@ -15,12 +15,13 @@ Defines the data exchanged between robot services and clients: JSON-RPC envelope
 | [../robotd/src/main.rs](../robotd/src/main.rs) | Daemon-side decoding and method handling consumer |
 | [../padd/src/main.rs](../padd/src/main.rs) | Gamepad request producer |
 | [../robotctl/src/main.rs](../robotctl/src/main.rs) | CLI request producer and result consumer |
+| [../../vision/ipc.py](../../vision/ipc.py) | Optional vision sidecar request producer |
 
 ## Call and data flow
 
 1. padd and robotctl build typed requests; robotd decodes them and returns typed results or errors over caller-managed Unix sockets.
 2. duck-control reuses joint names so telemetry arrays and model/driver naming cannot drift independently.
-3. The Python gateway implements its compatible wire requests separately; changing the Rust types alone does not update Python callers.
+3. The Python web gateway and the optional vision sidecar implement compatible wire requests separately; changing the Rust types alone does not update Python callers.
 
 ### Direct workspace relationships
 

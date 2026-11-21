@@ -1429,7 +1429,12 @@ async fn control_loop<T: RobotIo>(
             snapshot.command=PolicyCommand {twist:c.twist,head:c.head,..PolicyCommand::default()};
             snapshot.mouth=c.mouth;
             snapshot.twist_age=age;
-            xgo_command_revision=revision;
+            let (command, mouth, vision) = intents.overlay_xgo(snapshot.command, snapshot.mouth);
+            snapshot.command = command;
+            snapshot.mouth = mouth;
+            // `command_xgo` drops a repeat of the same revision. A fresh overlay has
+            // to look new or the head and the stop never reach the 50 Hz loop.
+            xgo_command_revision = if vision { intents.now_us().max(1) } else { revision };
         }
         // Reference Controller.step disarms after 150 ms without sensor feedback,
         // or immediately if the IMU is unavailable. It does not re-arm itself.
@@ -2967,6 +2972,9 @@ fn dispatch(
         | proto::Call::RobotPose(_)
         | proto::Call::RobotMouth(_) => {
             apply_intent(intents, call);
+            if let proto::Call::RobotMouth(p) = call {
+                intents.note_vision_mouth(p.open);
+            }
             proto::Response::ok(Some(id), &proto::IntentResult::accepted())
         }
 
@@ -2980,6 +2988,7 @@ fn dispatch(
                 std::sync::LazyLock::new(kinematics::head::HeadFk::alpha);
             let gaze = HEAD_FK.look_at([p.x, p.y, p.z], p.neck_pitch);
             intents.set_head(gaze.joints);
+            intents.note_vision_head(gaze.joints);
             let [neck_pitch, head_pitch, head_yaw, head_roll] = gaze.joints;
             proto::Response::ok(
                 Some(id),
@@ -3169,6 +3178,7 @@ fn dispatch(
 
         proto::Call::RobotStop => {
             intents.stop();
+            intents.note_vision_stop();
             proto::Response::ok(Some(id), &proto::IntentResult::accepted())
         }
 

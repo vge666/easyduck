@@ -1,0 +1,16 @@
+[Unit]
+Description=EasyDuck YOLO vision sidecar
+After=robotd.service
+Wants=robotd.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/robot/vision
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/robot/vision/visiond.py --model /var/lib/robot/vision/yolo26n.onnx --imgsz 320 --threads 2
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

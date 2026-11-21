@@ -15,6 +15,7 @@ Declarative application process management for systemd: startup commands, depend
 | [robotd.service](robotd.service) | Main daemon and robot socket permissions |
 | [padd.service](padd.service) | Gamepad client user/groups and restart settings |
 | [xgoduck-web.service](xgoduck-web.service) | Python controller service |
+| [easyduck-vision.service](easyduck-vision.service) | Optional YOLO sidecar; installed, not started by `deploy/start.sh` |
 | [xgoduck-calibration.service](xgoduck-calibration.service) | Exclusive calibration process |
 | [easyduck-setup.service](easyduck-setup.service) | Authenticated connection setup process |
 | [easyduck-gamepad-reconnect.timer](easyduck-gamepad-reconnect.timer) | Registered-controller retry timing |

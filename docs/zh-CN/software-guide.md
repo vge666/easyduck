@@ -9,6 +9,7 @@
                               → LSM6DSV16X / BNO085 IMU（默认 /dev/i2c-2）
                               → ONNX 动作模型、音效
 标定台（8766）→ 独占舵机串口与 IMU
+可选视觉 → 同一 IPC；不进入 50 Hz 循环
 ```
 
 `robotd` 负责主控制，`padd` 读取手柄，`robotctl` 提供状态查询和命令行操作，`sounds` 生成音效。网页和标定台是 Python 服务。除另有说明，命令在仓库根目录执行。
@@ -118,6 +119,7 @@ systemctl daemon-reload
 - 终止控制服务不等于舵机已经断力；操作或移动实物前核对断力状态。
 
 - 遥控页可设置 RGB 状态灯的开关、亮度和电量呼吸速度。颜色和闪烁方式见[状态灯对照表](web-control.md#rgb-状态指示灯)。
+- 可选视觉是单独进程。摄像头、权重和额外依赖见[视觉说明](vision.md)。`deploy/start.sh` 不会启动它。
 
 ## 实物检查
 
@@ -130,6 +132,7 @@ systemctl daemon-reload
 - [音效生成](sounds.md)
 - [动作模型接口](models.md)
 - [第三方许可证与素材来源](../../THIRD_PARTY_NOTICES.md)
+- [可选 YOLO 视觉](vision.md)
 
 ### 手柄前后速度
 

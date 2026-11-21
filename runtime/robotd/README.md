@@ -39,6 +39,7 @@ These are Cargo dependency edges, not proof that every optional runtime path is 
 
 - Do not equate process startup, policy loading, torque-on, and walking. Templates disable policies; physical motion remains an explicit operation.
 - The generic controller and XGO path differ. Retained protocol/body/kick features do not imply that the installed XGO loop executes them. Process restart is not proof of released servo torque.
+- On the XGO path, a fresh `robot.look`, `robot.mouth`, or `robot.stop` is applied over the web/gamepad command for about one second. That is how the optional vision sidecar uses the existing methods. When the refresh stops, the previous XGO command returns. The 50 Hz policy step itself is unchanged.
 
 ## Further reading
 

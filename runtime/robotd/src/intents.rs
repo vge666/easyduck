@@ -207,7 +207,22 @@ pub struct Intents {
     /// and the loop reads value + age so a dead client's ride decays instead of looping.
     wheee: ArcSwap<Stamped<bool>>,
     wheee_volume: std::sync::atomic::AtomicU64,
+    /// Short-lived XGO overrides from `robot.look`, `robot.mouth`, and `robot.stop`.
+    ///
+    /// The installed XGO loop consumes `xgo_command`, not the generic head and twist
+    /// slots those methods write. The overlay lets the same methods move the head,
+    /// open the beak, or zero velocity without a second control owner. It expires so
+    /// a sidecar that dies gives the stick back.
+    vision_head: ArcSwap<Stamped<Option<[f64; 4]>>>,
+    vision_mouth: ArcSwap<Stamped<Option<f64>>>,
+    vision_stop_at: std::sync::atomic::AtomicU64,
 }
+
+/// How long an XGO vision override stays in force without a refresh.
+///
+/// The camera sidecar is slower than the 50 Hz loop. One second covers a slow
+/// ONNX frame on the board; the next stick command returns when the refresh stops.
+pub const VISION_FRESH: Duration = Duration::from_millis(1000);
 
 /// What a client asked for, once.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -279,6 +294,15 @@ impl Intents {
                 value: false,
                 at_us: 0,
             }),
+            vision_head: ArcSwap::from_pointee(Stamped {
+                value: None,
+                at_us: 0,
+            }),
+            vision_mouth: ArcSwap::from_pointee(Stamped {
+                value: None,
+                at_us: 0,
+            }),
+            vision_stop_at: std::sync::atomic::AtomicU64::new(0),
         }
     }
 
@@ -303,6 +327,75 @@ impl Intents {
     /// Zero the velocity now. Distinct from the deadman only in that it is deliberate.
     pub fn stop(&self) {
         self.set_twist([0.0; 3]);
+    }
+
+    /// Remember a gaze for the XGO command path. Values are clamped to the same
+    /// ±1 rad the web and gamepad already use; non-finite input is ignored.
+    pub fn note_vision_head(&self, head: [f64; 4]) {
+        if !head.iter().all(|v| v.is_finite()) {
+            return;
+        }
+        self.vision_head.store(Arc::new(Stamped {
+            value: Some(head.map(|v| v.clamp(-1.0, 1.0))),
+            at_us: self.now_us().max(1),
+        }));
+    }
+
+    /// Remember a beak opening for the XGO command path. Clamped to 0..1.
+    pub fn note_vision_mouth(&self, open: f64) {
+        if !open.is_finite() {
+            return;
+        }
+        self.vision_mouth.store(Arc::new(Stamped {
+            value: Some(open.clamp(0.0, 1.0)),
+            at_us: self.now_us().max(1),
+        }));
+    }
+
+    /// Remember that walking should stay at zero velocity on the XGO path.
+    pub fn note_vision_stop(&self) {
+        self.vision_stop_at
+            .store(self.now_us().max(1), Ordering::Relaxed);
+    }
+
+    /// Apply a still-fresh vision override on top of the XGO command.
+    ///
+    /// Returns whether anything was applied. The caller uses that to give the
+    /// controller a new revision, because it ignores a command whose revision
+    /// it has already consumed.
+    pub fn overlay_xgo(&self, command: Command, mouth: f64) -> (Command, f64, bool) {
+        self.overlay_xgo_for(command, mouth, VISION_FRESH)
+    }
+
+    fn overlay_xgo_for(
+        &self,
+        mut command: Command,
+        mut mouth: f64,
+        fresh_for: Duration,
+    ) -> (Command, f64, bool) {
+        let now = self.now_us();
+        let limit = fresh_for.as_micros() as u64;
+        let fresh = |at: u64| at != 0 && now.saturating_sub(at) <= limit;
+        let mut active = false;
+        let head = self.vision_head.load();
+        if let Some(value) = head.value {
+            if fresh(head.at_us) {
+                command.head = value;
+                active = true;
+            }
+        }
+        let opening = self.vision_mouth.load();
+        if let Some(value) = opening.value {
+            if fresh(opening.at_us) {
+                mouth = value;
+                active = true;
+            }
+        }
+        if fresh(self.vision_stop_at.load(Ordering::Relaxed)) {
+            command.twist = [0.0; 3];
+            active = true;
+        }
+        (command, mouth, active)
     }
 
     pub fn set_pose(&self, pose: PoseIntent) {
@@ -687,6 +780,43 @@ mod tests {
         let intents = Intents::new();
         intents.set_twist([1.0, 0.0, 0.0]);
         assert_eq!(intents.snapshot().command.body, BodyPose::default());
+    }
+
+    /// XGO reads a different slot from `robot.look` / `robot.stop`. The overlay has to
+    /// zero velocity, clamp the head into the existing ±1 rad command, and give up
+    /// once the sidecar stops refreshing.
+    #[test]
+    fn vision_overlay_holds_then_expires() {
+        let intents = Intents::new();
+        let base = Command {
+            twist: [0.2, 0.0, 0.1],
+            head: [0.1, 0.0, 0.0, 0.0],
+            ..Command::default()
+        };
+        let (command, mouth, active) = intents.overlay_xgo(base, 0.2);
+        assert!(!active);
+        assert_eq!(command, base);
+        assert_eq!(mouth, 0.2);
+
+        intents.note_vision_head([f64::NAN, 0.0, 0.0, 0.0]);
+        let (_, _, active) = intents.overlay_xgo(base, 0.2);
+        assert!(!active, "a non-finite gaze must not stick");
+
+        intents.note_vision_stop();
+        intents.note_vision_head([0.0, 0.2, -0.4, 2.0]);
+        intents.note_vision_mouth(1.5);
+        let (command, mouth, active) = intents.overlay_xgo(base, 0.2);
+        assert!(active);
+        assert_eq!(command.twist, [0.0; 3]);
+        assert_eq!(command.head, [0.0, 0.2, -0.4, 1.0]);
+        assert_eq!(mouth, 1.0);
+        assert_eq!(command.body, base.body);
+
+        std::thread::sleep(Duration::from_millis(5));
+        let (command, mouth, active) = intents.overlay_xgo_for(base, 0.2, Duration::from_millis(1));
+        assert!(!active);
+        assert_eq!(command, base);
+        assert_eq!(mouth, 0.2);
     }
 }
 

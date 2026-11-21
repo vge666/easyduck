@@ -61,6 +61,7 @@ Runtime IPC additionally connects padd/robotctl/web to robotd; socket calls are 
 
 - Source code, deployed binaries, and a generated system image are separate states. Builds do not by themselves deploy or start services.
 - Fixtures and FakeIo support software checks, not contact simulation or physical-motion acceptance. Read each member's README before changing an interface.
+- The optional vision sidecar lives in `vision/` outside this workspace. It is not a Cargo member.
 
 ## Further reading
 

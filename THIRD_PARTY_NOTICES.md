@@ -17,6 +17,7 @@
 | 头部几何 | `runtime/kinematics/assets/alpha/robot_walk.xml` | 与记录的 Pollen 固定版本不完全一致，具体修改来源仍需补齐；不因不匹配就认定没有许可 |
 | UART3 内核补丁 | Linux 基线 060f864152f60b603a204826c538be3af4d15bff | GPL-2.0-only，见 LICENSES/GPL-2.0-only.txt |
 | Cargo 与系统依赖 | runtime/Cargo.lock、deploy/dependencies.lock.json | 各依赖分别适用其原许可证 |
+| 可选 YOLO 视觉 | 不随仓库分发。[vge666/ultralytics](https://github.com/vge666/ultralytics) 与 yolo26n 权重由操作者另行安装 | 上游 Ultralytics 代码及发布权重在未另取得许可时为 AGPL-3.0；不因可从 `vision/` 调用而改授为 Apache-2.0 |
 
 ## 随附许可与依赖信息
 

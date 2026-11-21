@@ -66,6 +66,7 @@ EasyDuck 使用泰山派 1M（RK3566）、15 个 HD1910 舵机和姿态传感器
 | 姿态传感器 | 支持 BNO085、LSM6DSV16X，按型号保存安装方向与静止偏置 |
 | 连接与运行管理 | Wi-Fi 设置、PS5 配对重连、服务自启动和异常退出重启 |
 | 低电量保护 | 板级配置在有效平滑总线电压 ≤6.2V 时抢占普通控制，条件允许时坐下，随后断力并锁定普通控制 |
+| 可选视觉 | USB 摄像头和 YOLO 检测／跟踪：见人问候、看见小物体时捡起、前方有障碍时停止。见[视觉说明](docs/zh-CN/vision.md) |
 
 动作可用性取决于模型、标定、供电和反馈状态。低电量保护不关闭 Linux。网页不提供跳跃或翻滚按钮，保留的踢腿／躯干输入也不代表当前控制流程已执行这些动作。
 
@@ -79,6 +80,7 @@ EasyDuck 使用泰山派 1M（RK3566）、15 个 HD1910 舵机和姿态传感器
 | 舵机 | 15 个 HD1910，默认使用 UART3，需要匹配的半双工方向控制 |
 | 姿态传感器 | BNO085 或 LSM6DSV16X，默认 I²C 总线为 `/dev/i2c-2` |
 | 控制端 | 浏览器，或 PS5 DualSense／已验证的 USB／2.4G 接收器手柄 |
+| 可选摄像头 | 供视觉旁路使用的 USB UVC MJPEG 摄像头；行走不依赖它 |
 
 系统需具备 Python 3.11+、ONNX Runtime、ALSA、NetworkManager、BlueZ 及匹配的板级驱动。USB 接收器需要内核中的 `xpad` 支持。依赖与安装细节见[部署说明](docs/zh-CN/deployment.md)和[手柄驱动说明](docs/zh-CN/usb-gamepad.md)。
 
@@ -122,6 +124,8 @@ flowchart TB
     Browser["浏览器控制页 :9527"] --> Web["Python 网页服务"]
     Pad["蓝牙 / USB 2.4G 手柄"] --> Padd["padd：读取手柄输入"]
     CLI["robotctl：命令行操作"] --> IPC["本机通信接口 /run/robotd.sock"]
+    Camera["USB 摄像头"] --> Vision["vision：可选 YOLO 旁路"]
+    Vision --> IPC
     Web --> IPC
     Padd --> IPC
     IPC --> Robotd["robotd：控制权、动作状态与保护"]
@@ -151,6 +155,7 @@ flowchart TB
 | 硬件与推理模块 | 实现舵机通信、IMU 数据处理、模型输入输出和推理 | `runtime/duck-control/` |
 | 标定服务 | 分配舵机 ID，设置中位、HOME、方向、范围及 IMU 标定 | `calibration/` |
 | 声音程序与播放逻辑 | `sounds` 生成音效库，主控侧逻辑负责运行时播放与嘴部配合 | `runtime/sounds/`、`runtime/robotd/` |
+| 可选视觉 | 运行 YOLO，并通过现有 IPC 发送问候、捡物和停止 | `vision/` |
 
 `duck-ipc-proto` 定义程序之间的消息格式，`robotd-params` 解析配置，`kinematics` 提供姿态几何计算。这些共用模块编入程序，不需要分别启动服务。详见 [Rust 工作区说明](docs/zh-CN/runtime.md)。
 
@@ -173,7 +178,7 @@ flowchart TB
 
 ### 网页、手柄与硬件访问
 
-正式运行时，`robotd` 统一读写舵机总线与 IMU。网页、`padd` 和 `robotctl` 通过本机通信接口提交请求，其中网页与手柄的控制权由主控统一管理。
+正式运行时，`robotd` 统一读写舵机总线与 IMU。网页、`padd`、`robotctl` 和可选视觉旁路通过本机通信接口提交请求，其中网页与手柄的控制权由主控统一管理。视觉旁路不取得该控制权。
 
 自动选择时，在线手柄优先；用户主动选择网页控制后，网页保持控制权。交还手柄需要松开摇杆、扳机和按键，切换后还需通过回中检查。**获得控制权与开启行走是两个独立步骤**，切换入口本身不会请求行走。
 

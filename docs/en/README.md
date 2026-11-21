@@ -12,6 +12,7 @@ Start with the software guide; use deployment for build details and calibration 
 | [Network access and spoken IP](network-access.md) | Phone hotspots, local names, and address announcements |
 | [USB / 2.4 GHz gamepads](usb-gamepad.md) | Receivers, xpad, and SDK image requirements |
 | [Web controller](web-control.md) | Controls, status, offline tests, and navigation |
+| [Vision](vision.md) | Optional camera, YOLO detect/track, greet, pickup, and obstacle stop |
 | [Servo and IMU workbench](calibration.md) | IDs, hardware center, HOME, direction, limits, and IMU |
 | [Configuration](configuration.md) | Profiles, precedence, calibration files, and audio seed |
 | [Motion policies](models.md) | Policy slots, observation/action contract, and provenance |
@@ -64,6 +65,7 @@ Each directory README explains responsibilities, actual files, call relationship
 | [tools](../../tools/README.md) | Repository maintenance checks |
 | [web](../../web/README.md) | Browser controller and gateway |
 | [web/assets](../../web/assets/README.md) | Controller browser assets |
+| [vision](../../vision/README.md) | Optional YOLO sidecar |
 
 ## Development examples
 

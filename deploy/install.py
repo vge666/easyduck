@@ -56,6 +56,8 @@ def mapping(profile, binaries):
         result.append((ROOT / 'deploy' / name, Path('opt/robot/deploy') / name))
     for name in ('server.py', 'usb_camera.py'):
         result.append((ROOT / 'web' / name, Path('opt/robot/xgoduck-web') / name))
+    for name in ('visiond.py', 'detect.py', 'behave.py', 'ipc.py', 'requirements.lock'):
+        result.append((ROOT / 'vision' / name, Path('opt/robot/vision') / name))
     for name in ('first_setup.py', 'connections.py', 'navigation.py'):
         result.append((ROOT / 'deploy/setup' / name, Path('opt/robot/setup') / name))
     tree(ROOT / 'deploy/setup/static', 'opt/robot/setup/static')
