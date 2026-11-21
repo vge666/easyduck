@@ -70,3 +70,12 @@ Other dependencies and system components
   Package notices are normally under /usr/share/doc/<package>/copyright.
   This application notice is not a complete system-image license audit or
   a substitute for corresponding source and other distribution duties.
+
+Ultralytics YOLO (optional, not included)
+  https://github.com/vge666/ultralytics
+  The vision sidecar can call the ultralytics package for detect/track, or
+  run an ONNX export of yolo26n through ONNX Runtime. Neither the package
+  nor the weights are in this repository. Upstream Ultralytics code and the
+  released YOLO weights are AGPL-3.0 unless a separate Ultralytics license
+  applies. They are not relicensed as Apache-2.0 by being runnable from
+  vision/.

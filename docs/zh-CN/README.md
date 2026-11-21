@@ -12,6 +12,7 @@
 | [网络访问与 IP 播报](network-access.md) | 手机热点、局域网名称和地址播报 |
 | [USB / 2.4G 手柄](usb-gamepad.md) | 接收器、xpad 与 SDK 镜像要求 |
 | [网页控制](web-control.md) | 操作、状态、离线测试和页面切换 |
+| [视觉](vision.md) | 可选摄像头、YOLO 检测／跟踪、问候、捡物和遇障停止 |
 | [舵机与 IMU 标定](calibration.md) | ID、硬件中位、HOME、方向、范围与 IMU |
 | [配置说明](configuration.md) | 配置模板、优先级、标定文件和音效种子 |
 | [动作模型](models.md) | 模型用途、输入输出约定和来源 |
@@ -64,6 +65,7 @@
 | [tools](../../tools/README.zh-CN.md) | 仓库维护检查 |
 | [web](../../web/README.zh-CN.md) | 浏览器控制页与网关 |
 | [web/assets](../../web/assets/README.zh-CN.md) | 控制页浏览器资源 |
+| [vision](../../vision/README.zh-CN.md) | 可选 YOLO 旁路 |
 
 ## 开发示例
 

@@ -66,6 +66,7 @@ Training runs on a GPU-equipped computer; EasyDuck runs the exported ONNX polici
 | IMU support | BNO085 and LSM6DSV16X, with installation rotation and static bias stored per model |
 | Connectivity and services | Wi-Fi setup, PS5 pairing/reconnection, service startup, and restart after process exit |
 | Low-battery protection | The board profile preempts normal control at a valid smoothed bus voltage ≤6.2 V, sits when possible, then releases torque and locks normal control |
+| Optional vision | USB camera and YOLO detect/track: greet a person, pick up a small object, and stop for an obstacle. See the [vision guide](docs/en/vision.md) |
 
 Motion availability depends on policies, calibration, power, and feedback. Low-battery protection leaves Linux running. The browser has no jump or roulade button; retained kick/body bindings do not imply that the current control flow executes those actions.
 
@@ -79,6 +80,7 @@ Motion availability depends on policies, calibration, power, and feedback. Low-b
 | Servos | 15 HD1910 servos on UART3 by default, with matching half-duplex direction control |
 | IMU | BNO085 or LSM6DSV16X; default I²C bus `/dev/i2c-2` |
 | Input | Browser, PS5 DualSense, or a tested USB/2.4 GHz receiver gamepad |
+| Optional camera | USB UVC MJPEG camera for the vision sidecar; walking does not require it |
 
 The system needs Python 3.11+, ONNX Runtime, ALSA, NetworkManager, BlueZ, and matching board drivers. USB receivers require the kernel's `xpad` driver. See [deployment](docs/en/deployment.md) and [USB gamepad support](docs/en/usb-gamepad.md) for dependencies and installation.
 
@@ -122,6 +124,8 @@ flowchart TB
     Browser["Browser controller :9527"] --> Web["Python web service"]
     Pad["Bluetooth / USB 2.4 GHz gamepad"] --> Padd["padd: read gamepad input"]
     CLI["robotctl: terminal commands"] --> IPC["Local IPC /run/robotd.sock"]
+    Camera["USB camera"] --> Vision["vision: optional YOLO sidecar"]
+    Vision --> IPC
     Web --> IPC
     Padd --> IPC
     IPC --> Robotd["robotd: ownership, action state, protection"]
@@ -151,6 +155,7 @@ flowchart TB
 | Hardware/inference library | Implement servo communication, IMU processing, policy observations/actions, and inference | `runtime/duck-control/` |
 | Calibration service | Assign servo IDs; set hardware center, HOME, direction, limits, and IMU calibration | `calibration/` |
 | Sound generation and playback | `sounds` builds the sound bank; daemon-side logic handles runtime playback and mouth coordination | `runtime/sounds/`, `runtime/robotd/` |
+| Optional vision | Run YOLO and send greet, pickup, and stop through the existing IPC socket | `vision/` |
 
 `duck-ipc-proto` defines inter-process messages, `robotd-params` parses configuration, and `kinematics` provides pose geometry. These shared crates compile into the programs and do not run as separate services. See [runtime](docs/en/runtime.md).
 
@@ -173,7 +178,7 @@ This gives **61 observation values and 14 action values**. The servo driver uses
 
 ### Browser/gamepad ownership and hardware access
 
-During normal operation, `robotd` owns the servo bus and IMU. The browser service, `padd`, and `robotctl` submit requests through local IPC; the daemon manages ownership between browser and gamepad.
+During normal operation, `robotd` owns the servo bus and IMU. The browser service, `padd`, `robotctl`, and the optional vision sidecar submit requests through local IPC; the daemon manages ownership between browser and gamepad. Vision does not take that ownership.
 
 Automatic selection prefers an online gamepad. Explicit browser takeover keeps browser ownership. Returning to the gamepad requires released sticks, triggers, and buttons, followed by a neutral-input check after handoff. **Ownership and walking enablement are separate states**: changing input source does not itself request walking.
 

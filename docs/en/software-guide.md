@@ -9,6 +9,7 @@ Web controller (9527) / padd -> robotd -> HD1910 servos (/dev/ttyS3)
                                      -> LSM6DSV16X / BNO085 IMU (default /dev/i2c-2)
                                      -> ONNX policies and audio
 Calibration (8766) -> exclusive servo serial and IMU access
+Optional vision -> same IPC; outside the 50 Hz loop
 ```
 
 `robotd` controls the robot, `padd` reads gamepads, `robotctl` provides queries/terminal operations, and `sounds` generates audio. Web and calibration services use Python. Run commands from the repository root unless stated otherwise.
@@ -114,6 +115,7 @@ Rollback does not start services or energize servos. Before reuse, check that co
 - A stopped control service does not prove servo torque is off. Confirm release before handling the robot.
 
 - The web controller lets you turn the RGB indicator on or off and adjust its brightness and battery breathing speed. See the [light pattern table](web-control.md#rgb-status-indicator).
+- Optional vision is a separate process. Camera, weights, and extra packages are described in the [vision guide](vision.md). It is not started by `deploy/start.sh`.
 
 ## Physical checks
 
@@ -126,6 +128,7 @@ Check serial feedback, joint directions/limits, IMU direction, supported torque-
 - [Sound generation](sounds.md)
 - [Policy interfaces](models.md)
 - [Third-party licenses and provenance](../../THIRD_PARTY_NOTICES.md)
+- [Optional YOLO vision](vision.md)
 
 ### Gamepad walking speeds
 

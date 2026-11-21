@@ -1,0 +1,8 @@
+# Optional vision sidecar. robotd, the web controller, and calibration do not import it.
+# Board path: Python 3.9+, numpy, pillow, and the Python onnxruntime package (1.23 or newer).
+# That package is separate from the native ONNX Runtime already used by robotd.
+# Developer path: ultralytics from https://github.com/vge666/ultralytics, which brings PyTorch.
+# Weights are not pinned or stored in this repository.
+numpy
+pillow
+onnxruntime

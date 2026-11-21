@@ -15,12 +15,13 @@
 | [../robotd/src/main.rs](../robotd/src/main.rs) | 主控侧消息解析与方法处理使用方 |
 | [../padd/src/main.rs](../padd/src/main.rs) | 手柄请求发送方 |
 | [../robotctl/src/main.rs](../robotctl/src/main.rs) | 命令行请求发送与结果读取方 |
+| [../../vision/ipc.py](../../vision/ipc.py) | 可选视觉旁路的请求发送方 |
 
 ## 调用与数据流
 
 1. padd 和 robotctl 组装有类型的请求，robotd 解析并通过调用方管理的 Unix socket 返回结果或错误。
 2. duck-control 复用关节名称，避免遥测数组与模型／驱动命名各自漂移。
-3. Python 网关另行实现兼容的线上消息；只改 Rust 类型不会同步修改 Python 调用方。
+3. Python 网页网关和可选视觉旁路另行实现兼容的线上消息；只改 Rust 类型不会同步修改 Python 调用方。
 
 ### 工作区直接关系
 
